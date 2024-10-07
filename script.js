@@ -56,10 +56,9 @@ function loadTeamNamesFromLocalStorage() {
 // Google Apps Script URL (replace this with your actual Web App URL)
 
 // Function to upload match data to Google Sheets
-// Function to upload match data to Google Sheets
 function uploadDataToGoogleSheets() {
     // Log the data to be uploaded
-    console.log("Uploading match data: ", {
+    console.log("Preparing to upload match data: ", {
         homeTeam: homeTeam,
         awayTeam: awayTeam,
         records: records
@@ -71,32 +70,35 @@ function uploadDataToGoogleSheets() {
         records: records
     };
 
-    // Perform the fetch request
+    // Perform the fetch request to Google Apps Script
     fetch(googleScriptURL, {
-        method: 'POST',
-        mode: 'cors',
+        method: 'POST',           // This tells it to use the POST method
+        mode: 'cors',             // Ensures cross-origin is handled
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json' // Content type is JSON
         },
-        body: JSON.stringify(matchData)
+        body: JSON.stringify(matchData) // Send the match data as a JSON string
     })
     .then(response => {
-        // Log the response from the fetch request
+        // Check if the response is ok (status code 200-299)
+        if (!response.ok) {
+            throw new Error("Network response was not ok. Status: " + response.status);
+        }
+        // Log the response from Google Sheets (just in case)
         console.log("Response from Google Sheets: ", response);
-        return response.text(); // Read the response as text
+        return response.text(); // Convert the response to text for further handling
     })
     .then(data => {
-        // Log the actual data returned by the server
+        // Log the actual data returned by the server (should be confirmation message)
         console.log("Data returned from server: ", data);
         alert("Data successfully uploaded to Google Sheets.");
     })
     .catch(error => {
-        // Log the error if something goes wrong
-        console.error("Error uploading data: ", error);
+        // Log any errors encountered during the fetch process
+        console.error("Error occurred while uploading data: ", error);
         alert("There was an error uploading the data: " + error.message);
     });
 }
-
 
 
 
