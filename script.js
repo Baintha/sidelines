@@ -56,13 +56,22 @@ function loadTeamNamesFromLocalStorage() {
 // Google Apps Script URL (replace this with your actual Web App URL)
 
 // Function to upload match data to Google Sheets
+// Function to upload match data to Google Sheets
 function uploadDataToGoogleSheets() {
+    // Log the data to be uploaded
+    console.log("Uploading match data: ", {
+        homeTeam: homeTeam,
+        awayTeam: awayTeam,
+        records: records
+    });
+
     const matchData = {
         homeTeam: homeTeam,
         awayTeam: awayTeam,
         records: records
     };
 
+    // Perform the fetch request
     fetch(googleScriptURL, {
         method: 'POST',
         mode: 'cors',
@@ -71,14 +80,23 @@ function uploadDataToGoogleSheets() {
         },
         body: JSON.stringify(matchData)
     })
-    .then(response => response.text())
+    .then(response => {
+        // Log the response from the fetch request
+        console.log("Response from Google Sheets: ", response);
+        return response.text(); // Read the response as text
+    })
     .then(data => {
+        // Log the actual data returned by the server
+        console.log("Data returned from server: ", data);
         alert("Data successfully uploaded to Google Sheets.");
     })
     .catch(error => {
+        // Log the error if something goes wrong
+        console.error("Error uploading data: ", error);
         alert("There was an error uploading the data: " + error.message);
     });
 }
+
 
 
 
