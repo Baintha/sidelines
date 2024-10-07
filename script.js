@@ -4,7 +4,7 @@ let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
 
-const googleScriptURL = 'https://script.google.com/macros/s/AKfycbyp3ELGMm7sn6GmGI9zf5RawWTs2DMicIhqCwf25vZ8RETIK6WM-HMHiecz8RXyR9A9/exec';
+const googleScriptURL = 'https://script.google.com/macros/s/AKfycby3ketD_cuuPgfjVk_WT8aPPLMM2qjkMvCh3SDf8dBAP_4brGdzaz7CQTGaCN9Ybks1/exec';
 
 
 // Define action categories and goal actions
