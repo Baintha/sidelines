@@ -3,10 +3,6 @@ let kickoffTime = null;
 let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
-
-const googleScriptURL = 'https://script.google.com/macros/s/AKfycbxZTrQwldwkTutwDTc82XvbGztj4xLtl7aaiDscazaqqU-_9Z76tztYAcAiYCb6wde0/exec';
-
-
 // Define action categories and goal actions
 const actionCategories = {
     "Corner": ["A. Corner", "D. Opp corner"],
@@ -48,62 +44,6 @@ function loadTeamNamesFromLocalStorage() {
         awayTeam = storedAwayTeam;
     }
 }
-
-
-
-
-
-// Google Apps Script URL (replace this with your actual Web App URL)
-
-// Function to upload match data to Google Sheets
-function uploadDataToGoogleSheets() {
-    // Log the data to be uploaded
-    console.log("Preparing to upload match data: ", {
-        homeTeam: homeTeam,
-        awayTeam: awayTeam,
-        records: records
-    });
-
-    const matchData = {
-        homeTeam: homeTeam,
-        awayTeam: awayTeam,
-        records: records
-    };
-
-    // Perform the fetch request to Google Apps Script
-    fetch(googleScriptURL, {
-        method: 'POST',           // This tells it to use the POST method
-        mode: 'cors',             // Ensures cross-origin is handled
-        headers: {
-            'Content-Type': 'application/json' // Content type is JSON
-        },
-        body: JSON.stringify(matchData) // Send the match data as a JSON string
-    })
-    .then(response => {
-        // Check if the response is ok (status code 200-299)
-        if (!response.ok) {
-            throw new Error("Network response was not ok. Status: " + response.status);
-        }
-        // Log the response from Google Sheets (just in case)
-        console.log("Response from Google Sheets: ", response);
-        return response.text(); // Convert the response to text for further handling
-    })
-    .then(data => {
-        // Log the actual data returned by the server (should be confirmation message)
-        console.log("Data returned from server: ", data);
-        alert("Data successfully uploaded to Google Sheets.");
-    })
-    .catch(error => {
-        // Log any errors encountered during the fetch process
-        console.error("Error occurred while uploading data: ", error);
-        alert("There was an error uploading the data: " + error.message);
-    });
-}
-
-
-
-
-
 
 
 
@@ -327,9 +267,6 @@ document.getElementById('clear-btn').addEventListener('click', clearData);
 
 // Add event listener for the "Set Team Names" button
 document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
-
-// Add event listener for the "Upload to Google Sheets" button
-document.getElementById('upload-btn').addEventListener('click', uploadDataToGoogleSheets);
 
 
 // Load records from localStorage when the page loads
