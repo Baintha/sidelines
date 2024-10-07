@@ -1,5 +1,7 @@
 let records = [];
 let kickoffTime = null;
+let homeTeam = 'SCI/RB'; // Default home team name
+let awayTeam = 'Opposition'; // Default away team name
 
 // Define action categories and goal actions
 const actionCategories = {
@@ -11,6 +13,40 @@ const actionCategories = {
 };
 
 const goalActions = ["A. GOAL!", "D. Opp goal"]; // Define goal actions
+
+// Function to set team names
+function setTeamNames() {
+    const home = prompt('Enter My Team Name:', homeTeam);
+    const away = prompt('Enter Opposition Team Name:', awayTeam);
+
+    if (home && away) {
+        homeTeam = home;
+        awayTeam = away;
+        saveTeamNamesToLocalStorage(); // Save to localStorage
+        alert(`Team names set: Home - ${homeTeam}, Away - ${awayTeam}`);
+    } else {
+        alert('Please enter valid team names for both teams.');
+    }
+}
+
+// Save team names to localStorage
+function saveTeamNamesToLocalStorage() {
+    localStorage.setItem('homeTeam', homeTeam);
+    localStorage.setItem('awayTeam', awayTeam);
+}
+
+// Load team names from localStorage
+function loadTeamNamesFromLocalStorage() {
+    const storedHomeTeam = localStorage.getItem('homeTeam');
+    const storedAwayTeam = localStorage.getItem('awayTeam');
+    if (storedHomeTeam && storedAwayTeam) {
+        homeTeam = storedHomeTeam;
+        awayTeam = storedAwayTeam;
+    }
+}
+
+
+
 
 // Function to handle button clicks
 function handleButtonClick(event) {
@@ -27,7 +63,7 @@ function handleButtonClick(event) {
     const elapsedMinutes = Math.floor(elapsedMs / 60000); // Convert ms to minutes
 
     // Determine the "Team" value
-    const team = action.includes('Opp') ? 'Opposition' : 'SCI/RB';
+    const team = action.includes('Opp') ? awayTeam : homeTeam;
 
     // Determine the "Pitch" value
     let pitch;
@@ -229,5 +265,12 @@ actionButtons.forEach(button => {
 document.getElementById('download-btn').addEventListener('click', downloadCSV);
 document.getElementById('clear-btn').addEventListener('click', clearData);
 
+// Add event listener for the "Set Team Names" button
+document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
+
+
 // Load records from localStorage when the page loads
 window.addEventListener('DOMContentLoaded', loadRecordsFromLocalStorage);
+
+// Load team names from localStorage when the page loads
+window.addEventListener('DOMContentLoaded', loadTeamNamesFromLocalStorage);
