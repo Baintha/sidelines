@@ -3,6 +3,10 @@ let kickoffTime = null;
 let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
+
+const googleScriptURL = 'https://script.google.com/macros/s/AKfycbzfs8zagt_sYbT9Xg0nMAyNTyXwWgHLvoLLdsBnJobQwAZIvzI1ogyeNia4jAwsHvN0/exec';
+
+
 // Define action categories and goal actions
 const actionCategories = {
     "Corner": ["A. Corner", "D. Opp corner"],
@@ -44,6 +48,42 @@ function loadTeamNamesFromLocalStorage() {
         awayTeam = storedAwayTeam;
     }
 }
+
+
+
+
+
+// Google Apps Script URL (replace this with your actual Web App URL)
+
+// Function to upload match data to Google Sheets
+function uploadDataToGoogleSheets() {
+    const matchData = {
+        homeTeam: homeTeam,
+        awayTeam: awayTeam,
+        records: records
+    };
+
+    fetch(googleScriptURL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(matchData)
+    })
+    .then(response => response.text())
+    .then(data => {
+        alert("Data successfully uploaded to Google Sheets.");
+    })
+    .catch(error => {
+        alert("There was an error uploading the data: " + error.message);
+    });
+}
+
+
+
+
+
 
 
 
@@ -267,6 +307,9 @@ document.getElementById('clear-btn').addEventListener('click', clearData);
 
 // Add event listener for the "Set Team Names" button
 document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
+
+// Add event listener for the "Upload to Google Sheets" button
+document.getElementById('upload-btn').addEventListener('click', uploadDataToGoogleSheets);
 
 
 // Load records from localStorage when the page loads
