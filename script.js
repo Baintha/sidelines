@@ -3,9 +3,8 @@ let kickoffTime = null;
 let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
-
-const googleScriptURL = 'https://script.google.com/macros/s/AKfycbwSnzPphy07ZRa_eN79N5BWVg3Po0rPLFs4f-HkrK6AqF3UD9wFmYbnb-_RZWMqgZys/exec';
-
+// Webhook URL for Zapier
+const zapierWebhookURL = 'https://hooks.zapier.com/hooks/catch/20364053/2m7dixf/'; // Replace with your Zapier webhook URL
 
 // Define action categories and goal actions 
 const actionCategories = {
@@ -49,14 +48,8 @@ function loadTeamNamesFromLocalStorage() {
     }
 }
 
-
-
-
-
-// Google Apps Script URL (replace this with your actual Web App URL)
-
-// Function to upload match data to Google Sheets
-function uploadDataToGoogleSheets() {
+// Function to upload match data to Zapier
+function uploadDataToZapier() {
     // Log the data to be uploaded
     console.log("Preparing to upload match data: ", {
         homeTeam: homeTeam,
@@ -70,8 +63,8 @@ function uploadDataToGoogleSheets() {
         records: records
     };
 
-    // Perform the fetch request to Google Apps Script
-    fetch(googleScriptURL, {
+    // Perform the fetch request to Zapier webhook
+    fetch(zapierWebhookURL, {
         method: 'POST',           // This tells it to use the POST method
         mode: 'cors',             // Ensures cross-origin is handled
         headers: {
@@ -84,14 +77,14 @@ function uploadDataToGoogleSheets() {
         if (!response.ok) {
             throw new Error("Network response was not ok. Status: " + response.status);
         }
-        // Log the response from Google Sheets (just in case)
-        console.log("Response from Google Sheets: ", response);
+        // Log the response from Zapier (just in case)
+        console.log("Response from Zapier: ", response);
         return response.text(); // Convert the response to text for further handling
     })
     .then(data => {
         // Log the actual data returned by the server (should be confirmation message)
         console.log("Data returned from server: ", data);
-        alert("Data successfully uploaded to Google Sheets.");
+        alert("Data successfully uploaded to Google Sheets via Zapier.");
     })
     .catch(error => {
         // Log any errors encountered during the fetch process
@@ -99,14 +92,6 @@ function uploadDataToGoogleSheets() {
         alert("There was an error uploading the data: " + error.message);
     });
 }
-
-
-
-
-
-
-
-
 
 // Function to handle button clicks
 function handleButtonClick(event) {
@@ -250,90 +235,56 @@ function renderTable() {
 // Function to download CSV
 function downloadCSV() {
     if (records.length === 0) {
-        alert('No data to download!');
+        alert('No data to download.');
         return;
     }
 
-    const header = Object.keys(records[0]).join(',');
-    const rows = records.map(record => {
-        const action = `"${record.Action.replace(/"/g, '""')}"`;
-        const timestamp = `"${record.Timestamp.replace(/"/g, '""')}"`;
-        const team = `"${record.Team.replace(/"/g, '""')}"`;
-        const pitch = `"${record.Pitch.replace(/"/g, '""')}"`;
-        const actionCategory = `"${record["Action Category"].replace(/"/g, '""')}"`;
-        const goals = record.Goals;
-        const goalscorer = `"${(record.Goalscorer || '').replace(/"/g, '""')}"`; // Include goalscorer
-        const elapsed = record["Elapsed Time (min)"];
-        return [action, timestamp, team, pitch, actionCategory, goals, goalscorer, elapsed].join(',');
-    });
-    const csvContent = [header, ...rows].join('\n');
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + "Action,Timestamp,Team,Pitch,Action Category,Goals,Goalscorer,Elapsed Time (min)\n" // CSV header
+        + records.map(record => [
+            record.Action,
+            record.Timestamp,
+            record.Team,
+            record.Pitch,
+            record["Action Category"],
+            record.Goals,
+            record.Goalscorer,
+            record["Elapsed Time (min)"]
+        ].join(",")).join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const downloadLink = document.createElement('a');
-    downloadLink.setAttribute('href', url);
-    const dateStr = new Date().toISOString().slice(0,19).replace(/[:T]/g, "-");
-    downloadLink.setAttribute('download', `football_stats_${dateStr}.csv`);
-    downloadLink.style.visibility = 'hidden';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "match_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
-// Function to clear data
-function clearData() {
-    if (confirm('Are you sure you want to clear all recorded data?')) {
-        records = [];
-        kickoffTime = null;
-        localStorage.removeItem('footballStatsRecords');
-        localStorage.removeItem('kickoffTime');
-        // Clear the table
-        const tableBody = document.querySelector('#records-table tbody');
-        tableBody.innerHTML = '';
-        alert('Data cleared.');
-    }
-}
-
-// Function to save records to localStorage
+// Save records to localStorage
 function saveRecordsToLocalStorage() {
-    localStorage.setItem('footballStatsRecords', JSON.stringify(records));
-    localStorage.setItem('kickoffTime', kickoffTime ? kickoffTime.toISOString() : null);
+    localStorage.setItem('matchRecords', JSON.stringify(records));
 }
 
-// Function to load records from localStorage
+// Load records from localStorage
 function loadRecordsFromLocalStorage() {
-    const storedRecords = localStorage.getItem('footballStatsRecords');
-    const storedKickoff = localStorage.getItem('kickoffTime');
+    const storedRecords = localStorage.getItem('matchRecords');
     if (storedRecords) {
         records = JSON.parse(storedRecords);
-        // Restore kickoffTime
-        if (storedKickoff) {
-            kickoffTime = new Date(storedKickoff);
-        }
-        renderTable(); // Render table after loading records
+        renderTable(); // Render loaded records in the table
     }
 }
 
-// Attach event listeners to all action buttons
-const actionButtons = document.querySelectorAll('.btn.blue, .btn.pink');
-actionButtons.forEach(button => {
+// Add event listeners to buttons
+document.querySelectorAll('.action-btn').forEach(button => {
     button.addEventListener('click', handleButtonClick);
 });
 
-// Attach event listeners to download and clear buttons
-document.getElementById('download-btn').addEventListener('click', downloadCSV);
-document.getElementById('clear-btn').addEventListener('click', clearData);
+// Upload button
+document.getElementById('upload-btn').addEventListener('click', uploadDataToZapier);
 
-// Add event listener for the "Set Team Names" button
-document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
-
-// Add event listener for the "Upload to Google Sheets" button
-document.getElementById('upload-btn').addEventListener('click', uploadDataToGoogleSheets);
-
-
-// Load records from localStorage when the page loads
-window.addEventListener('DOMContentLoaded', loadRecordsFromLocalStorage);
-
-// Load team names from localStorage when the page loads
-window.addEventListener('DOMContentLoaded', loadTeamNamesFromLocalStorage);
+// Load team names and records when the page is loaded
+window.addEventListener('load', () => {
+    loadTeamNamesFromLocalStorage(); // Load team names
+    loadRecordsFromLocalStorage(); // Load match records
+});
