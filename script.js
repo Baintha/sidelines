@@ -54,47 +54,41 @@ function loadTeamNamesFromLocalStorage() {
 
 
 
-
 function uploadDataToAirtable() {
+    console.log("Preparing to upload match data to Airtable...");
+
     const matchData = {
-        records: [
-            {
-                fields: {
-                    HomeTeam: homeTeam,
-                    AwayTeam: awayTeam,
-                    Records: JSON.stringify(records)
-                }
-            }
-        ]
+        fields: {
+            'Home Team': homeTeam,
+            'Away Team': awayTeam,
+            'Records': JSON.stringify(records) // Adjust this to your field name
+        }
     };
 
-fetch(airtableAPIURL, {
-    method: 'POST',
-    headers: {
-        'Authorization': `Bearer ${airtableAPIToken}`,
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(matchData)
-})
-.then(response => {
-    console.log("Response Status: ", response.status); // Log response status
-    return response.json().then(data => {
-        return { status: response.status, data: data }; // Return both status and data
+    fetch(airtableApiUrl, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${yourPersonalAccessToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(matchData)
+    })
+    .then(response => {
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Data uploaded successfully:", data);
+        alert("Data successfully uploaded to Airtable.");
+    })
+    .catch(error => {
+        console.error("Error occurred while uploading data:", error);
+        alert("Error uploading data: " + error.message);
     });
-})
-.then(result => {
-    if (result.status !== 200) {
-        throw new Error("Error: " + result.data.error.message); // Log detailed error message
-    }
-    console.log("Data returned from Airtable: ", result.data);
-    alert("Data successfully uploaded to Airtable.");
-})
-.catch(error => {
-    console.error("Error occurred while uploading data: ", error);
-    alert("There was an error uploading the data: " + error.message);
-});
-
-
+}
 
 
 
@@ -321,7 +315,6 @@ document.getElementById('set-teams-btn').addEventListener('click', setTeamNames)
 
 // Attach event listener for the "Upload to Airtable" button
 document.getElementById('upload-btn').addEventListener('click', uploadDataToAirtable);
-
 
 
 // Load records from localStorage when the page loads
