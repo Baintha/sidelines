@@ -7,7 +7,7 @@ let awayTeam = 'Opposition'; // Default away team name
 const googleScriptURL = 'https://script.google.com/macros/s/AKfycbxZTrQwldwkTutwDTc82XvbGztj4xLtl7aaiDscazaqqU-_9Z76tztYAcAiYCb6wde0/exec';
 
 
-// Define action categories and goal actions
+// Define action categories and goal actions 
 const actionCategories = {
     "Corner": ["A. Corner", "D. Opp corner"],
     "Shot": ["A. Shot off target", "A. Shot saved", "A. GOAL!", "D. Opp shot off target", "D. Opp shot saved", "D. Opp goal"],
