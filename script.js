@@ -4,7 +4,8 @@ let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
 
-const googleScriptURL = 'https://script.google.com/macros/s/AKfycbwSnzPphy07ZRa_eN79N5BWVg3Po0rPLFs4f-HkrK6AqF3UD9wFmYbnb-_RZWMqgZys/exec';
+const airtableApiURL = `https://api.airtable.com/v0/appY3RNdiGxzA84qh/importedtable`;
+const personalAccessToken = "pat12jZgoYwveFLLf.e56a5e026e66929f49efc3301792103ad5327b1dfa6b0bf32c097bb426effad4";  // Replace with your actual Personal Access Token
 
 
 // Define action categories and goal actions 
@@ -102,7 +103,42 @@ function uploadDataToGoogleSheets() {
 
 
 
+function uploadDataToAirtable() {
+    const matchData = {
+        records: [
+            {
+                fields: {
+                    HomeTeam: homeTeam,
+                    AwayTeam: awayTeam,
+                    Records: JSON.stringify(records)
+                }
+            }
+        ]
+    };
 
+    fetch(airtableApiURL, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${personalAccessToken}`,  // Use the PAT here
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(matchData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Data successfully uploaded to Airtable:", data);
+        alert("Data successfully uploaded to Airtable.");
+    })
+    .catch(error => {
+        console.error("Error uploading data to Airtable:", error);
+        alert(`Error uploading data: ${error.message}`);
+    });
+}
 
 
 
