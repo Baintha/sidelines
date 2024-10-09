@@ -3,7 +3,7 @@ let kickoffTime = null;
 let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
-
+const tableName = encodeURIComponent('importedtable'); // Replace with your actual table name
 const airtableApiURL = `https://api.airtable.com/v0/appY3RNdiGxzA84qh/importedtable`;
 const personalAccessToken = "pat12jZgoYwveFLLf.e56a5e026e66929f49efc3301792103ad5327b1dfa6b0bf32c097bb426effad4";  // Replace with your actual Personal Access Token
 
@@ -68,29 +68,32 @@ function uploadDataToAirtable() {
         ]
     };
 
-    fetch(airtableApiURL, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${personalAccessToken}`,  // Use the PAT here
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(matchData)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log("Data successfully uploaded to Airtable:", data);
-        alert("Data successfully uploaded to Airtable.");
-    })
-    .catch(error => {
-        console.error("Error uploading data to Airtable:", error);
-        alert(`Error uploading data: ${error.message}`);
+fetch(airtableAPIURL, {
+    method: 'POST',
+    headers: {
+        'Authorization': `Bearer ${airtableAPIToken}`,
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(matchData)
+})
+.then(response => {
+    console.log("Response Status: ", response.status); // Log response status
+    return response.json().then(data => {
+        return { status: response.status, data: data }; // Return both status and data
     });
-}
+})
+.then(result => {
+    if (result.status !== 200) {
+        throw new Error("Error: " + result.data.error.message); // Log detailed error message
+    }
+    console.log("Data returned from Airtable: ", result.data);
+    alert("Data successfully uploaded to Airtable.");
+})
+.catch(error => {
+    console.error("Error occurred while uploading data: ", error);
+    alert("There was an error uploading the data: " + error.message);
+});
+
 
 
 
