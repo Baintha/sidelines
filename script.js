@@ -75,216 +75,145 @@ function uploadDataToZapier() {
     .then(response => {
         // Check if the response is ok (status code 200-299)
         if (!response.ok) {
-            throw new Error("Network response was not ok. Status: " + response.status);
+            throw new Error('Network response was not ok');
         }
-        // Log the response from Zapier (just in case)
-        console.log("Response from Zapier: ", response);
-        return response.text(); // Convert the response to text for further handling
+        return response.json(); // Parse the JSON from the response
     })
     .then(data => {
-        // Log the actual data returned by the server (should be confirmation message)
-        console.log("Data returned from server: ", data);
-        alert("Data successfully uploaded to Google Sheets via Zapier.");
+        console.log('Upload success:', data);
+        alert('Data successfully uploaded to Zapier!');
     })
-    .catch(error => {
-        // Log any errors encountered during the fetch process
-        console.error("Error occurred while uploading data: ", error);
-        alert("There was an error uploading the data: " + error.message);
+    .catch((error) => {
+        console.error('Error uploading data:', error);
+        alert('Error uploading data to Zapier. Check console for details.');
     });
 }
 
-// Function to handle button clicks
-function handleButtonClick(event) {
-    const action = event.target.getAttribute('data-action');
-    const timestamp = new Date();
+// Add an event listener for the set team names button
+document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
 
-    // If this is the first action, set kickoffTime
-    if (!kickoffTime) {
-        kickoffTime = timestamp;
-    }
+// Function to add an event listener to each action button
+document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const action = btn.getAttribute('data-action');
+        const timestamp = new Date().toLocaleTimeString(); // Get the current time as a string
+        const currentPitch = getCurrentPitch(action);
+        const actionCategory = getActionCategory(action);
+        const goals = checkGoals(action);
+        const goalscorer = getGoalscorer(action);
+        const elapsedTime = getElapsedTime();
 
-    // Calculate elapsed time in minutes since kickoff
-    const elapsedMs = timestamp - kickoffTime;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000); // Convert ms to minutes
+        // Add the new record to the records array
+        records.push({ action, timestamp, team: homeTeam, pitch: currentPitch, actionCategory, goals, goalscorer, elapsedTime });
 
-    // Determine the "Team" value
-    const team = action.includes('Opp') ? awayTeam : homeTeam;
+        // Log the new record to the console
+        console.log('New record added:', { action, timestamp, team: homeTeam, pitch: currentPitch, actionCategory, goals, goalscorer, elapsedTime });
 
-    // Determine the "Pitch" value
-    let pitch;
-    if (action.startsWith('A.')) {
-        pitch = 'Attack';
-    } else if (action.startsWith('M.')) {
-        pitch = 'Midfield';
-    } else if (action.startsWith('D.')) {
-        pitch = 'Defence';
-    } else {
-        pitch = ''; // In case of an unhandled action, leave it empty
-    }
-
-    // Determine the "Action Category"
-    let actionCategory = '';
-    for (const [category, keywords] of Object.entries(actionCategories)) {
-        for (const keyword of keywords) {
-            if (action.includes(keyword)) {
-                actionCategory = category;
-                break;
-            }
-        }
-        if (actionCategory) break;
-    }
-
-    // Determine the "Goals" value
-    let goals = goalActions.includes(action) ? 1 : 0;
-
-    // New: Ask for goalscorer name if it's a goal action
-    let goalscorer = '';
-    if (goals > 0) {
-        goalscorer = prompt('Enter the goalscorer\'s name:');
-        if (!goalscorer) {
-            goalscorer = 'Unknown'; // Fallback if user cancels or leaves blank
-        }
-    }
-
-    // Create the record
-    const record = {
-        Action: action,
-        Timestamp: timestamp.toLocaleString(),
-        Team: team,
-        Pitch: pitch,
-        "Action Category": actionCategory,
-        Goals: goals,
-        Goalscorer: goalscorer, // Add goalscorer field
-        "Elapsed Time (min)": elapsedMinutes
-    };
-    records.push(record);
-    console.log(`Recorded: ${action} at ${timestamp.toLocaleString()}`);
-    addRecordToTable(record);
-    saveRecordsToLocalStorage();
-}
-
-// Function to add a record to the table with a delete button
-function addRecordToTable(record, index = records.length - 1) {
-    const tableBody = document.querySelector('#records-table tbody');
-    const row = document.createElement('tr');
-
-    const actionCell = document.createElement('td');
-    actionCell.textContent = record.Action;
-    row.appendChild(actionCell);
-
-    const timestampCell = document.createElement('td');
-    timestampCell.textContent = record.Timestamp;
-    row.appendChild(timestampCell);
-
-    const teamCell = document.createElement('td');
-    teamCell.textContent = record.Team;
-    row.appendChild(teamCell);
-
-    const pitchCell = document.createElement('td');
-    pitchCell.textContent = record.Pitch;
-    row.appendChild(pitchCell);
-
-    const actionCategoryCell = document.createElement('td');
-    actionCategoryCell.textContent = record["Action Category"];
-    row.appendChild(actionCategoryCell);
-
-    const goalsCell = document.createElement('td');
-    goalsCell.textContent = record.Goals;
-    row.appendChild(goalsCell);
-
-    const goalscorerCell = document.createElement('td'); // New goalscorer cell
-    goalscorerCell.textContent = record.Goalscorer || ''; // Only show if it's a goal action
-    row.appendChild(goalscorerCell);
-
-    const elapsedCell = document.createElement('td');
-    elapsedCell.textContent = record["Elapsed Time (min)"];
-    row.appendChild(elapsedCell);
-
-    // Add delete button
-    const deleteCell = document.createElement('td');
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Delete';
-    deleteButton.classList.add('delete-btn');
-    deleteButton.setAttribute('data-index', index); // Set index for delete reference
-    deleteButton.addEventListener('click', handleDeleteRow);
-    deleteCell.appendChild(deleteButton);
-    row.appendChild(deleteCell);
-
-    tableBody.appendChild(row);
-}
-
-// Function to handle row deletion
-function handleDeleteRow(event) {
-    const index = event.target.getAttribute('data-index'); // Get index from data attribute
-    if (index !== null && confirm('Are you sure you want to delete this row?')) {
-        records.splice(index, 1); // Remove the record from the array
-        saveRecordsToLocalStorage(); // Save updated records to localStorage
-        renderTable(); // Re-render the table
-    }
-}
-
-// Function to render the table (used after deleting a row)
-function renderTable() {
-    const tableBody = document.querySelector('#records-table tbody');
-    tableBody.innerHTML = ''; // Clear the table
-    records.forEach((record, index) => {
-        addRecordToTable(record, index); // Re-populate the table with updated records
+        // Update the records table
+        updateRecordsTable();
     });
-}
-
-// Function to download CSV
-function downloadCSV() {
-    if (records.length === 0) {
-        alert('No data to download.');
-        return;
-    }
-
-    const csvContent = "data:text/csv;charset=utf-8," 
-        + "Action,Timestamp,Team,Pitch,Action Category,Goals,Goalscorer,Elapsed Time (min)\n" // CSV header
-        + records.map(record => [
-            record.Action,
-            record.Timestamp,
-            record.Team,
-            record.Pitch,
-            record["Action Category"],
-            record.Goals,
-            record.Goalscorer,
-            record["Elapsed Time (min)"]
-        ].join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "match_data.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// Save records to localStorage
-function saveRecordsToLocalStorage() {
-    localStorage.setItem('matchRecords', JSON.stringify(records));
-}
-
-// Load records from localStorage
-function loadRecordsFromLocalStorage() {
-    const storedRecords = localStorage.getItem('matchRecords');
-    if (storedRecords) {
-        records = JSON.parse(storedRecords);
-        renderTable(); // Render loaded records in the table
-    }
-}
-
-// Add event listeners to buttons
-document.querySelectorAll('.action-btn').forEach(button => {
-    button.addEventListener('click', handleButtonClick);
 });
 
-// Upload button
+// Function to get the current pitch based on the action
+function getCurrentPitch(action) {
+    if (action.startsWith('A.')) return 'Attack'; // Actions starting with A. are in the attack
+    if (action.startsWith('M.')) return 'Midfield'; // Actions starting with M. are in the midfield
+    if (action.startsWith('D.')) return 'Defence'; // Actions starting with D. are in the defence
+    return 'Unknown'; // If the action doesn't match, return Unknown
+}
+
+// Function to get action category
+function getActionCategory(action) {
+    for (const category in actionCategories) {
+        if (actionCategories[category].includes(action)) {
+            return category; // Return the category name if found
+        }
+    }
+    return 'Unknown'; // If not found, return Unknown
+}
+
+// Function to check if the action is a goal
+function checkGoals(action) {
+    return goalActions.includes(action) ? 1 : 0; // Return 1 if it's a goal action, otherwise 0
+}
+
+// Function to get the goalscorer if the action is a goal
+function getGoalscorer(action) {
+    if (action === 'A. GOAL!') {
+        return prompt('Enter goalscorer name:'); // Prompt for goalscorer name
+    }
+    return ''; // Return an empty string if it's not a goal
+}
+
+// Function to get elapsed time (this is a placeholder; implement your own logic)
+function getElapsedTime() {
+    const currentTime = new Date();
+    if (!kickoffTime) {
+        kickoffTime = currentTime; // Set kickoff time on the first action
+    }
+    const elapsedTimeInMinutes = Math.floor((currentTime - kickoffTime) / 60000); // Calculate elapsed time in minutes
+    return elapsedTimeInMinutes;
+}
+
+// Function to update the records table
+function updateRecordsTable() {
+    const tbody = document.querySelector('#records-table tbody');
+    tbody.innerHTML = ''; // Clear the table body first
+    records.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${record.action}</td>
+            <td>${record.timestamp}</td>
+            <td>${record.team}</td>
+            <td>${record.pitch}</td>
+            <td>${record.actionCategory}</td>
+            <td>${record.goals}</td>
+            <td>${record.goalscorer}</td>
+            <td>${record.elapsedTime}</td>
+            <td><button class="delete-btn" data-index="${index}">Delete</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Add event listeners to delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const index = btn.getAttribute('data-index');
+            deleteRecord(index);
+        });
+    });
+}
+
+// Function to delete a record
+function deleteRecord(index) {
+    records.splice(index, 1); // Remove the record from the array
+    updateRecordsTable(); // Update the table to reflect the deletion
+}
+
+// Event listener for download button
+document.getElementById('download-btn').addEventListener('click', function () {
+    const csvData = records.map(record => `${record.action},${record.timestamp},${record.team},${record.pitch},${record.actionCategory},${record.goals},${record.goalscorer},${record.elapsedTime}`).join('\n');
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'match_stats.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// Event listener for clear data button
+document.getElementById('clear-btn').addEventListener('click', function () {
+    if (confirm('Are you sure you want to clear all data?')) {
+        records = []; // Clear the records array
+        updateRecordsTable(); // Update the table to reflect the clearing of data
+    }
+});
+
+// Event listener for upload button
 document.getElementById('upload-btn').addEventListener('click', uploadDataToZapier);
 
-// Load team names and records when the page is loaded
-window.addEventListener('load', () => {
-    loadTeamNamesFromLocalStorage(); // Load team names
-    loadRecordsFromLocalStorage(); // Load match records
-});
+// Load team names from local storage when the page loads
+loadTeamNamesFromLocalStorage();
