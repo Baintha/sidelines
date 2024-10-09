@@ -65,10 +65,10 @@ function uploadDataToAirtable() {
         }
     };
 
-    fetch(airtableApiUrl, {
+    fetch(airtableApiURL, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${yourPersonalAccessToken}`,
+            'Authorization': `Bearer ${personalAccessToken}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(matchData)
