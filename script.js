@@ -4,9 +4,8 @@ let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
 const tableName = encodeURIComponent('importedtable'); // Replace with your actual table name
-const airtableApiURL = `https://api.airtable.com/v0/appY3RNdiGxzA84qh/importedtable`;
+const airtableApiURL = `https://api.airtable.com/v0/appY3RNdiGxzA84qh/$importedtable`; // Ensure table name is included
 const personalAccessToken = "pat12jZgoYwveFLLf.e56a5e026e66929f49efc3301792103ad5327b1dfa6b0bf32c097bb426effad4";  // Replace with your actual Personal Access Token
-
 
 // Define action categories and goal actions 
 const actionCategories = {
@@ -50,10 +49,7 @@ function loadTeamNamesFromLocalStorage() {
     }
 }
 
-
-
-
-
+// Upload data to Airtable
 function uploadDataToAirtable() {
     console.log("Preparing to upload match data to Airtable...");
 
@@ -68,7 +64,7 @@ function uploadDataToAirtable() {
     fetch(airtableApiURL, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${personalAccessToken}`,
+            'Authorization': `Bearer ${personalAccessToken}`, // Correct variable name
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(matchData)
@@ -89,9 +85,6 @@ function uploadDataToAirtable() {
         alert("Error uploading data: " + error.message);
     });
 }
-
-
-
 
 // Function to handle button clicks
 function handleButtonClick(event) {
@@ -215,110 +208,42 @@ function addRecordToTable(record, index = records.length - 1) {
 
 // Function to handle row deletion
 function handleDeleteRow(event) {
-    const index = event.target.getAttribute('data-index'); // Get index from data attribute
-    if (index !== null && confirm('Are you sure you want to delete this row?')) {
-        records.splice(index, 1); // Remove the record from the array
-        saveRecordsToLocalStorage(); // Save updated records to localStorage
-        renderTable(); // Re-render the table
-    }
+    const index = event.target.getAttribute('data-index');
+    records.splice(index, 1); // Remove the record from the array
+    saveRecordsToLocalStorage(); // Save updated records to localStorage
+    renderTable(); // Re-render the table
 }
 
-// Function to render the table (used after deleting a row)
+// Function to render the records table
 function renderTable() {
     const tableBody = document.querySelector('#records-table tbody');
-    tableBody.innerHTML = ''; // Clear the table
+    tableBody.innerHTML = ''; // Clear the current table
+
     records.forEach((record, index) => {
-        addRecordToTable(record, index); // Re-populate the table with updated records
+        addRecordToTable(record, index);
     });
-}
-
-// Function to download CSV
-function downloadCSV() {
-    if (records.length === 0) {
-        alert('No data to download!');
-        return;
-    }
-
-    const header = Object.keys(records[0]).join(',');
-    const rows = records.map(record => {
-        const action = `"${record.Action.replace(/"/g, '""')}"`;
-        const timestamp = `"${record.Timestamp.replace(/"/g, '""')}"`;
-        const team = `"${record.Team.replace(/"/g, '""')}"`;
-        const pitch = `"${record.Pitch.replace(/"/g, '""')}"`;
-        const actionCategory = `"${record["Action Category"].replace(/"/g, '""')}"`;
-        const goals = record.Goals;
-        const goalscorer = `"${(record.Goalscorer || '').replace(/"/g, '""')}"`; // Include goalscorer
-        const elapsed = record["Elapsed Time (min)"];
-        return [action, timestamp, team, pitch, actionCategory, goals, goalscorer, elapsed].join(',');
-    });
-    const csvContent = [header, ...rows].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const downloadLink = document.createElement('a');
-    downloadLink.setAttribute('href', url);
-    const dateStr = new Date().toISOString().slice(0,19).replace(/[:T]/g, "-");
-    downloadLink.setAttribute('download', `football_stats_${dateStr}.csv`);
-    downloadLink.style.visibility = 'hidden';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-}
-
-// Function to clear data
-function clearData() {
-    if (confirm('Are you sure you want to clear all recorded data?')) {
-        records = [];
-        kickoffTime = null;
-        localStorage.removeItem('footballStatsRecords');
-        localStorage.removeItem('kickoffTime');
-        // Clear the table
-        const tableBody = document.querySelector('#records-table tbody');
-        tableBody.innerHTML = '';
-        alert('Data cleared.');
-    }
 }
 
 // Function to save records to localStorage
 function saveRecordsToLocalStorage() {
-    localStorage.setItem('footballStatsRecords', JSON.stringify(records));
-    localStorage.setItem('kickoffTime', kickoffTime ? kickoffTime.toISOString() : null);
+    localStorage.setItem('matchRecords', JSON.stringify(records));
 }
 
 // Function to load records from localStorage
 function loadRecordsFromLocalStorage() {
-    const storedRecords = localStorage.getItem('footballStatsRecords');
-    const storedKickoff = localStorage.getItem('kickoffTime');
+    const storedRecords = localStorage.getItem('matchRecords');
     if (storedRecords) {
         records = JSON.parse(storedRecords);
-        // Restore kickoffTime
-        if (storedKickoff) {
-            kickoffTime = new Date(storedKickoff);
-        }
-        renderTable(); // Render table after loading records
+        renderTable(); // Render the loaded records
     }
 }
 
-// Attach event listeners to all action buttons
-const actionButtons = document.querySelectorAll('.btn.blue, .btn.pink');
-actionButtons.forEach(button => {
-    button.addEventListener('click', handleButtonClick);
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    loadRecordsFromLocalStorage(); // Load existing records on page load
+    document.querySelector('#upload-btn').addEventListener('click', uploadDataToAirtable); // Attach event listener for upload button
+    document.querySelectorAll('.action-btn').forEach(button => {
+        button.addEventListener('click', handleButtonClick); // Attach event listeners for action buttons
+    });
+    loadTeamNamesFromLocalStorage(); // Load team names from localStorage
 });
-
-// Attach event listeners to download and clear buttons
-document.getElementById('download-btn').addEventListener('click', downloadCSV);
-document.getElementById('clear-btn').addEventListener('click', clearData);
-
-// Add event listener for the "Set Team Names" button
-document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
-
-// Attach event listener for the "Upload to Airtable" button
-document.getElementById('upload-btn').addEventListener('click', uploadDataToAirtable);
-
-
-// Load records from localStorage when the page loads
-window.addEventListener('DOMContentLoaded', loadRecordsFromLocalStorage);
-
-// Load team names from localStorage when the page loads
-window.addEventListener('DOMContentLoaded', loadTeamNamesFromLocalStorage);
