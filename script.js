@@ -77,9 +77,6 @@ function uploadDataToZapier() {
     fetch(zapierWebhookURL, {
         method: 'POST',           // Use POST to send the data
         mode: 'cors',             // Ensure CORS is handled
-        headers: {
-            'Content-Type': 'application/json' // Send JSON
-        },
         body: JSON.stringify(matchData) // Serialize the match data
     })
     .then(response => {
