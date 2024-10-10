@@ -1,6 +1,6 @@
 let records = [];
 let kickoffTime = null;
-let homeTeam = 'SCI/RB'; // Default home team name
+let homeTeam = 'SCI'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
 // Webhook URL for Zapier
