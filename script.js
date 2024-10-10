@@ -104,6 +104,7 @@ document.getElementById('set-teams-btn').addEventListener('click', setTeamNames)
 document.querySelectorAll('.action-btn').forEach(btn => {
     btn.addEventListener('click', function () {
         const action = btn.getAttribute('data-action');
+        const team = btn.getAttribute('data-team'); //new
         const timestamp = new Date().toLocaleTimeString(); // Get the current time as a string
         const currentPitch = getCurrentPitch(action);
         const actionCategory = getActionCategory(action);
