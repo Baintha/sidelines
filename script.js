@@ -235,6 +235,53 @@ function clearData() {
     }
 }
 
+// Function to upload data via Zapier webhook
+function uploadData() {
+    if (records.length === 0) {
+        alert('No data to upload!');
+        return;
+    }
+
+    // Define your Zapier Webhook URL here
+    const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/your-webhook-id/'; // Replace with actual Zapier Webhook URL
+
+    // Prepare the payload for Zapier
+    const payload = {
+        records: records.map(record => ({
+            action: record.Action,
+            timestamp: record.Timestamp,
+            team: record.Team,
+            pitch: record.Pitch,
+            actionCategory: record["Action Category"],
+            goals: record.Goals,
+            goalscorer: record.Goalscorer,
+            elapsedTime: record["Elapsed Time (min)"]
+        }))
+    };
+
+    // Send the data to Zapier
+    fetch(zapierWebhookUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Data successfully uploaded to Excel via Zapier!');
+        } else {
+            alert('Failed to upload data.');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading data:', error);
+        alert('An error occurred while uploading data.');
+    });
+}
+
+
+
 // Function to save records to localStorage
 function saveRecordsToLocalStorage() {
     localStorage.setItem('footballStatsRecords', JSON.stringify(records));
@@ -267,6 +314,10 @@ document.getElementById('clear-btn').addEventListener('click', clearData);
 
 // Add event listener for the "Set Team Names" button
 document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
+
+// Add event listener for the "Upload" button
+document.getElementById('upload-btn').addEventListener('click', uploadData);
+
 
 
 // Load records from localStorage when the page loads
