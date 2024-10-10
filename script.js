@@ -64,30 +64,19 @@ function uploadDataToZapier() {
     };
 
     // Perform the fetch request to Zapier webhook
-    fetch(zapierWebhookURL, {
-        method: 'POST',           // This tells it to use the POST method
-        mode: 'cors',             // Ensures cross-origin is handled
-        headers: {
-            'Content-Type': 'application/json' // Content type is JSON
-        },
-        body: JSON.stringify(matchData) // Send the match data as a JSON string
-    })
-    .then(response => {
-        // Check if the response is ok (status code 200-299)
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json(); // Parse the JSON from the response
-    })
-    .then(data => {
-        console.log('Upload success:', data);
-        alert('Data successfully uploaded to Zapier!');
-    })
-    .catch((error) => {
-        console.error('Error uploading data:', error);
-        alert('Error uploading data to Zapier. Check console for details.');
-    });
-}
+    fetch('https://hooks.zapier.com/hooks/catch/20364053/2mjhftg/', {
+    method: 'POST',
+    body: JSON.stringify(data) // Remove `Content-Type` header and rely on defaults
+}).then(response => {
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    return response.json();
+}).then(result => {
+    console.log('Success:', result);
+}).catch(error => {
+    console.error('Error uploading data:', error);
+});
 
 // Add an event listener for the set team names button
 document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
