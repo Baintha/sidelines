@@ -259,20 +259,26 @@ function uploadData() {
         }))
     };
 
-   fetch('https://hooks.zapier.com/hooks/catch/20364053/2mjhftg/', {
-    method: 'POST',
-    body: JSON.stringify(data) // Remove `Content-Type` header and rely on defaults
-}).then(response => {
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-    return response.json();
-}).then(result => {
-    console.log('Success:', result);
-}).catch(error => {
-    console.error('Error uploading data:', error);
-});
-
+    // Send the data to Zapier
+    fetch(zapierWebhookUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Data successfully uploaded to Excel via Zapier!');
+        } else {
+            alert('Failed to upload data.');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading data:', error);
+        alert('An error occurred while uploading data.');
+    });
+}
 
 
 
