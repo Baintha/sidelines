@@ -4,7 +4,7 @@ let homeTeam = 'SCI/RB'; // Default home team name
 let awayTeam = 'Opposition'; // Default away team name
 
 // Webhook URL for Zapier
-const zapierWebhookURL = 'https://hooks.zapier.com/hooks/catch/20364053/2m7dixf/'; // Replace with your Zapier webhook URL
+const zapierWebhookURL = 'https://hooks.zapier.com/hooks/catch/20364053/21oy1dv/'; // Replace with your Zapier webhook URL
 
 // Define action categories and goal actions 
 const actionCategories = {
@@ -49,45 +49,56 @@ function loadTeamNamesFromLocalStorage() {
 }
 
 // Function to upload match data to Zapier
+// Function to upload match data to Zapier
 function uploadDataToZapier() {
-    // Log the data to be uploaded
     console.log("Preparing to upload match data: ", {
         homeTeam: homeTeam,
         awayTeam: awayTeam,
         records: records
     });
 
+    // Construct the match data
     const matchData = {
         homeTeam: homeTeam,
         awayTeam: awayTeam,
-        records: records
+        records: records.map(record => ({
+            action: record.action,
+            timestamp: record.timestamp,
+            team: record.team,
+            pitch: record.pitch,
+            actionCategory: record.actionCategory,
+            goals: record.goals,
+            goalscorer: record.goalscorer,
+            elapsedTime: record.elapsedTime
+        }))
     };
 
-    // Perform the fetch request to Zapier webhook
+    // Fetch request to send the match data to Zapier
     fetch(zapierWebhookURL, {
-        method: 'POST',           // This tells it to use the POST method
-        mode: 'cors',             // Ensures cross-origin is handled
+        method: 'POST',           // Use POST to send the data
+        mode: 'cors',             // Ensure CORS is handled
         headers: {
-            'Content-Type': 'application/json' // Content type is JSON
+            'Content-Type': 'application/json' // Send JSON
         },
-        body: JSON.stringify(matchData) // Send the match data as a JSON string
+        body: JSON.stringify(matchData) // Serialize the match data
     })
     .then(response => {
-        // Check if the response is ok (status code 200-299)
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        return response.json(); // Parse the JSON from the response
+        return response.json(); // Parse the JSON response
     })
     .then(data => {
         console.log('Upload success:', data);
         alert('Data successfully uploaded to Zapier!');
     })
-    .catch((error) => {
+    .catch(error => {
         console.error('Error uploading data:', error);
         alert('Error uploading data to Zapier. Check console for details.');
     });
 }
+
+
 
 // Add an event listener for the set team names button
 document.getElementById('set-teams-btn').addEventListener('click', setTeamNames);
